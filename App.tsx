@@ -11,10 +11,11 @@ import {
   FlatList,
   ListRenderItem
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import ModalDropdown from 'react-native-modal-dropdown';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import en from './langauge/en';
 import sw from './langauge/sw';
+
 // Type definitions
 type FormData = {
   location: string;
@@ -68,9 +69,8 @@ type LocationsMap = {
   [key: string]: LocationCoordinates;
 };
 
-
-// Add this type definition
 type Language = 'en' | 'sw';
+
 // Crop coefficients data
 const cropCoefficients: Record<string, CropCoefficients> = {
   maize: {
@@ -80,8 +80,6 @@ const cropCoefficients: Record<string, CropCoefficients> = {
     lateSeason: { Kc: 0.7, duration: 30 },
     totalDuration: 140
   },
-  
-
   beans: {
     initial: { Kc: 0.35, duration: 20 },
     development: { Kc: 0.75, duration: 30 },
@@ -102,7 +100,6 @@ const fetchClimateData = async (location: string): Promise<ClimateData> => {
   const locations: LocationsMap = {
     "Kasapo": { "lat": -6.3585, "lon": 36.7219 },
     "Bangalala": { "lat": -6.4378, "lon": 36.7254 },
-    
   };
   
   if (!(location in locations)) {
@@ -155,10 +152,9 @@ const calculateIrrigationFrequency = (
   growthStage: string
 ): number => {
   const baseFreq: Record<string, Record<string, number>> = {
-    "maize": { "Initial": 3, "Development":3 , "Mid-Season": 3, "Late-Season": 5 },
+    "maize": { "Initial": 3, "Development": 3, "Mid-Season": 3, "Late-Season": 5 },
     "beans": { "Initial": 4, "Development": 3, "Mid-Season": 3, "Late-Season": 5 },
     "tomatoes": { "Initial": 3, "Development": 3, "Mid-Season": 2, "Late-Season": 5 },
-   
   };
 
   const cropFrequencies = baseFreq[crop];
@@ -258,60 +254,36 @@ const FarmInputForm: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [schedule, setSchedule] = useState<ScheduleItem[] | string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<Language>('en');
+  const [translations, setTranslations] = useState(en);
 
-    // Add language state
-    const [language, setLanguage] = useState<Language>('en');
-    const [translations, setTranslations] = useState(en);
-  
-    // Update translations when language changes
-    useEffect(() => {
-      setTranslations(language === 'en' ? en : sw);
-    }, [language]);
-  
-    // Add language switcher function
-    const toggleLanguage = () => {
-      setLanguage(prev => prev === 'en' ? 'sw' : 'en');
-    };
-  
+  const locationOptions = ['Kasapo', 'Bangalala'];
+  const cropOptions = ['maize', 'beans', 'tomatoes'];
+  const soilTypeOptions = ['clay', 'sandy'];
 
-  const locations: SelectOption[] = [
-    { label: 'Select Location', value: '' },
-    { label: 'Kasapo', value: 'Kasapo' },
-    { label: 'Bangalala', value: 'Bangalala' },
-   
-  ];
+  useEffect(() => {
+    setTranslations(language === 'en' ? en : sw);
+  }, [language]);
 
-  const crops: SelectOption[] = [
-    { label: 'Select Crop', value: '' },
-    { label: 'Maize', value: 'maize' },
-    
-    { label: 'beans', value: 'beans' },
-    { label: 'Potatoes', value: 'tomatoes' },
-  ];
+  const toggleLanguage = (): void => {
+    setLanguage(prev => prev === 'en' ? 'sw' : 'en');
+  };
 
-  const soilTypes: SelectOption[] = [
-    { label: 'Select Soil Type', value: '' },
-    { label: 'Clay', value: 'clay' },
-    { label: 'Sandy', value: 'sandy' },
-    
-  ];
-
-  const handleInputChange = <K extends keyof FormData>(name: K, value: FormData[K]) => {
+  const handleInputChange = <K extends keyof FormData>(name: K, value: FormData[K]): void => {
     setFormData({
       ...formData,
       [name]: value,
     });
   };
 
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date): void => {
     setShowDatePicker(false);
     if (selectedDate) {
       handleInputChange('plantingDate', selectedDate);
     }
   };
 
-  const handleSubmit = async () => {
-    // Validate form
+  const handleSubmit = async (): Promise<void> => {
     if (!formData.location || !formData.crop || !formData.farmSize || !formData.soilType) {
       setError('jaza nafasi zote');
       return;
@@ -351,176 +323,158 @@ const FarmInputForm: React.FC = () => {
   const renderScheduleItem: ListRenderItem<ScheduleItem> = ({ item }) => (
     <View style={styles.scheduleItem}>
       <Text style={styles.scheduleDate}>{item.Date}</Text>
-      <Text>Stage: {item['Growth Stage']}</Text>
-      <Text>Water/acre: {item['Water per acre (liters)']} liters</Text>
-      <Text>Total water: {item['Total water (liters)']} liters</Text>
+      <Text>{translations.stage}: {item['Growth Stage']}</Text>
+      <Text>{translations.waterPerAcre}: {item['Water per acre (liters)']} {translations.liters}</Text>
+      <Text>{translations.totalWater}: {item['Total water (liters)']} {translations.liters}</Text>
     </View>
   );
 
   return (
-  <ScrollView style={styles.container}>
-  <View style={styles.navbar}>
-    <Text style={styles.navbarTitle}>{translations.header}</Text>
-    <Text style={styles.mylan}>lugha</Text>
-    <TouchableOpacity onPress={toggleLanguage} style={styles.languageButton}>
-      <Text style={styles.languageButtonText}>
-        {language === 'en' ? 'SW' : 'EN'}
-      </Text>
-    </TouchableOpacity>
-  </View>
-  
-  {error && <Text style={styles.errorText}>{error}</Text>}
-
-  {/* Location Picker */}
-  <View style={styles.inputContainer}>
-    <Text style={styles.label}>{translations.location}</Text>
-    <View style={styles.pickerContainer}>
-      <Picker
-        selectedValue={formData.location}
-        onValueChange={(itemValue: string) => handleInputChange('location', itemValue)}
-        style={styles.picker}
-      >
-        <Picker.Item label={translations.selectLocation} value="" />
-        <Picker.Item label={translations.kasapo} value="Kasapo" />
-        <Picker.Item label={translations.bangalala} value="Bangalala" />
-     
-      </Picker>
-    </View>
-  </View>
-
-  {/* Crop Picker */}
-  <View style={styles.inputContainer}>
-    <Text style={styles.label}>{translations.crop}</Text>
-    <View style={styles.pickerContainer}>
-      <Picker
-        selectedValue={formData.crop}
-        onValueChange={(itemValue: string) => handleInputChange('crop', itemValue)}
-        style={styles.picker}
-      >
-        <Picker.Item label={translations.selectCrop} value="" />
-        <Picker.Item label={translations.maize} value="maize" />
-        <Picker.Item label={translations.beans} value="beans" />
-        <Picker.Item label={translations.tomatoes} value="tomatoes" />
-      </Picker>
-    </View>
-  </View>
-
-  {/* Planting Date - Cross-platform solution */}
-  <View style={styles.inputContainer}>
-    <Text style={styles.label}>{translations.plantingDate}</Text>
-    {Platform.OS === 'web' ? (
-      // Web implementation
-      <input
-        type="date"
-        value={formData.plantingDate.toISOString().split('T')[0]}
-        onChange={(e) => {
-          const date = new Date(e.target.value);
-          handleInputChange('plantingDate', date);
-        }}
-        style={{
-          padding: '12px',
-          border: '1px solid #d1d5db',
-          borderRadius: '6px',
-          backgroundColor: 'white',
-          width: '100%',
-        }}
-      />
-    ) : (
-      // Mobile implementation
-      <>
-        <TouchableOpacity
-          style={styles.dateInput}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text>{formData.plantingDate.toDateString()}</Text>
+    <ScrollView style={styles.container}>
+      <View style={styles.navbar}>
+        <Text style={styles.navbarTitle}>{translations.header}</Text>
+        <Text style={styles.mylan}>lugha</Text>
+        <TouchableOpacity onPress={toggleLanguage} style={styles.languageButton}>
+          <Text style={styles.languageButtonText}>
+            {language === 'en' ? 'SW' : 'EN'}
+          </Text>
         </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={formData.plantingDate}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'inline' : 'default'}
-            onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
-              if (Platform.OS !== 'ios') {
-                setShowDatePicker(false);
-              }
-              if (selectedDate) {
-                handleInputChange('plantingDate', selectedDate);
-              }
-            }}
-          />
-        )}
-      </>
-    )}
-  </View>
-
-  {/* Farm Size */}
-  <View style={styles.inputContainer}>
-    <Text style={styles.label}>{translations.farmSize}</Text>
-    <TextInput
-      style={styles.textInput}
-      placeholder={translations.enterFarmSize}
-      keyboardType="numeric"
-      value={formData.farmSize}
-      onChangeText={(text: string) => handleInputChange('farmSize', text)}
-    />
-  </View>
-
-  {/* Soil Type Picker */}
-  <View style={styles.inputContainer}>
-    <Text style={styles.label}>{translations.soilType}</Text>
-    <View style={styles.pickerContainer}>
-      <Picker
-        selectedValue={formData.soilType}
-        onValueChange={(itemValue: string) => handleInputChange('soilType', itemValue)}
-        style={styles.picker}
-      >
-        <Picker.Item label={translations.selectSoilType} value="" />
-        <Picker.Item label={translations.clay} value="clay" />
-        <Picker.Item label={translations.sandy} value="sandy" />
-        <Picker.Item label={translations.loamy} value="loamy" />
+      </View>
       
-      </Picker>
-    </View>
-  </View>
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
-  {/* Submit Button */}
-  <TouchableOpacity
-    style={styles.submitButton}
-    onPress={handleSubmit}
-    disabled={loading}
-  >
-    {loading ? (
-      <ActivityIndicator color="white" />
-    ) : (
-      <Text style={styles.submitButtonText}>{translations.submitButton}</Text>
-    )}
-  </TouchableOpacity>
-
-  {/* Results Section */}
-  {schedule && (
-    <View style={styles.resultsContainer}>
-      <Text style={styles.resultsHeader}>{translations.resultsHeader}</Text>
-      
-      {typeof schedule === 'string' ? (
-        <Text style={styles.errorText}>{schedule}</Text>
-      ) : (
-        <FlatList
-          data={schedule}
-          renderItem={({ item }) => (
-            <View style={styles.scheduleItem}>
-              <Text style={styles.scheduleDate}>{item.Date}</Text>
-              <Text>{translations.stage}: {item['Growth Stage']}</Text>
-              <Text>{translations.waterPerAcre}: {item['Water per acre (liters)']} {translations.liters}</Text>
-              <Text>{translations.totalWater}: {item['Total water (liters)']} {translations.liters}</Text>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>{translations.location}</Text>
+        <ModalDropdown
+          options={locationOptions}
+          defaultValue={translations.selectLocation}
+          onSelect={(index: number, value: string) => handleInputChange('location', value)}
+          textStyle={styles.dropdownText}
+          dropdownStyle={styles.dropdown}
+          dropdownTextStyle={styles.dropdownOptionText}
+          style={styles.dropdownContainer}
+          renderRow={(option: string) => (
+            <View style={styles.dropdownRow}>
+              <Text>{option}</Text>
             </View>
           )}
-          keyExtractor={(item, index) => index.toString()}
-          scrollEnabled={false}
         />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>{translations.crop}</Text>
+        <ModalDropdown
+          options={cropOptions}
+          defaultValue={translations.selectCrop}
+          onSelect={(index: number, value: string) => handleInputChange('crop', value)}
+          textStyle={styles.dropdownText}
+          dropdownStyle={styles.dropdown}
+          dropdownTextStyle={styles.dropdownOptionText}
+          style={styles.dropdownContainer}
+          renderRow={(option: string) => (
+            <View style={styles.dropdownRow}>
+              <Text>{option}</Text>
+            </View>
+          )}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>{translations.plantingDate}</Text>
+        {Platform.OS === 'web' ? (
+          <input
+            type="date"
+            value={formData.plantingDate.toISOString().split('T')[0]}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const date = new Date(e.target.value);
+              handleInputChange('plantingDate', date);
+            }}
+            style={{
+              padding: '12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              backgroundColor: 'white',
+              width: '100%',
+            }}
+          />
+        ) : (
+          <>
+            <TouchableOpacity
+              style={styles.dateInput}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text>{formData.plantingDate.toDateString()}</Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={formData.plantingDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                onChange={handleDateChange}
+              />
+            )}
+          </>
+        )}
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>{translations.farmSize}</Text>
+        <TextInput
+          style={styles.textInput}
+          placeholder={translations.enterFarmSize}
+          keyboardType="numeric"
+          value={formData.farmSize}
+          onChangeText={(text: string) => handleInputChange('farmSize', text)}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>{translations.soilType}</Text>
+        <ModalDropdown
+          options={soilTypeOptions}
+          defaultValue={translations.selectSoilType}
+          onSelect={(index: number, value: string) => handleInputChange('soilType', value)}
+          textStyle={styles.dropdownText}
+          dropdownStyle={styles.dropdown}
+          dropdownTextStyle={styles.dropdownOptionText}
+          style={styles.dropdownContainer}
+          renderRow={(option: string) => (
+            <View style={styles.dropdownRow}>
+              <Text>{option}</Text>
+            </View>
+          )}
+        />
+      </View>
+
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={handleSubmit}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text style={styles.submitButtonText}>{translations.submitButton}</Text>
+        )}
+      </TouchableOpacity>
+
+      {schedule && (
+        <View style={styles.resultsContainer}>
+          <Text style={styles.resultsHeader}>{translations.resultsHeader}</Text>
+          
+          {typeof schedule === 'string' ? (
+            <Text style={styles.errorText}>{schedule}</Text>
+          ) : (
+            <FlatList
+              data={schedule}
+              renderItem={renderScheduleItem}
+              keyExtractor={(item, index) => index.toString()}
+              scrollEnabled={false}
+            />
+          )}
+        </View>
       )}
-    </View>
-  )}
-</ScrollView>
+    </ScrollView>
   );
 };
 
@@ -530,26 +484,22 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#f8f9fa',
   },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 24,
-    textAlign: 'center',
-    color: '#1a3e1a',
-  },
   navbar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    marginTop:20,
-    marginBottom:20,
+    marginTop: 20,
+    marginBottom: 20,
     backgroundColor: '#16a34a',
   },
   navbarTitle: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  mylan: {
+    color: '#fff',
   },
   languageButton: {
     backgroundColor: 'white',
@@ -563,7 +513,6 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 16,
-    lineHeight:10,
   },
   label: {
     fontSize: 14,
@@ -571,24 +520,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     color: '#374151',
   },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 6,
-    backgroundColor: 'white',
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-  },
-  dateInput: {
+  textInput: {
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 6,
     backgroundColor: 'white',
     padding: 12,
   },
-  textInput: {
+  dateInput: {
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 6,
@@ -637,9 +576,33 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 4,
   },
-  mylan: {
-color:'#fff',
-  }
+  dropdownContainer: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 6,
+    backgroundColor: 'white',
+    padding: 12,
+    width: '100%',
+  },
+  dropdownText: {
+    fontSize: 16,
+  },
+  dropdown: {
+    marginTop: Platform.OS === 'ios' ? 0 : -40,
+    width: '90%',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  dropdownOptionText: {
+    padding: 10,
+    fontSize: 16,
+  },
+  dropdownRow: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
 });
 
 export default FarmInputForm;
