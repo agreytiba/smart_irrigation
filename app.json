@@ -1,7 +1,6 @@
 {
   "expo": {
     "name": "my-expo-app",
-    "slug": "my-expo-app",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png"
@@ -33,7 +32,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "8eb01270-1712-4e03-ab2f-f62897c2038c"
+        "projectId": "045281d2-ab3f-459c-ba18-8984426e5807"
       }
     }
   }
