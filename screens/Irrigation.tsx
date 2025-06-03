@@ -1,16 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
   StyleSheet,
   Platform,
   ActivityIndicator,
   Animated,
   TextInput,
   Modal,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { RootTabParamList } from '../App';
@@ -19,11 +19,21 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { Ionicons } from '@expo/vector-icons';
 import { generateIrrigationSchedule } from '../services/irrigationService';
 import { FormData } from '../types';
+import { useLanguage } from '../context/LanguageContext';
+import i18n from '../i18n/localization';
 
 type DropdownType = 'location' | 'crop' | 'soilType';
 
 const IrrigationScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootTabParamList>>();
+  const { language } = useLanguage();
+
+  const [, setForceUpdate] = useState(0);
+  useEffect(() => {
+    i18n.locale = language;
+    setForceUpdate((c) => c + 1);
+  }, [language]);
+
   const [formData, setFormData] = useState<FormData>({
     location: '',
     crop: '',
@@ -75,22 +85,21 @@ const IrrigationScreen = () => {
 
   const handleInputChange = <K extends keyof FormData>(name: K, value: FormData[K]) => {
     if (isMounted.current) {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleSubmit = async () => {
     if (!isMounted.current) return;
 
-    // Validate all required fields
     if (!formData.location || !formData.crop || !formData.farmSize || !formData.soilType) {
-      setError('Please fill all fields');
+      setError(i18n.t('error_fill_all_fields'));
       return;
     }
 
     const farmSizeNum = parseFloat(formData.farmSize);
     if (isNaN(farmSizeNum) || farmSizeNum <= 0) {
-      setError('Please enter a valid farm size (greater than 0)');
+      setError(i18n.t('error_invalid_farm_size'));
       return;
     }
 
@@ -111,23 +120,15 @@ const IrrigationScreen = () => {
       if (typeof result === 'string') {
         setError(result);
       } else {
-        // Ensure data is serializable for navigation
         const serializableData = JSON.parse(JSON.stringify(result));
-        
-        try {
-          console.log('Attempting navigation with data:', serializableData);
-          navigation.navigate('Schedule', { 
-            scheduleData: serializableData 
-          });
-        } catch (e) {
-          console.error('Navigation error:', e);
-          setError('Navigation failed. Please try again.');
-        }
+        navigation.navigate('Schedule', {
+          scheduleData: serializableData,
+        });
       }
     } catch (err) {
       console.error('Error generating schedule:', err);
       if (isMounted.current) {
-        setError('Failed to generate irrigation schedule. Please try again later.');
+        setError(i18n.t('error_generate_failed'));
       }
     } finally {
       if (isMounted.current) {
@@ -162,13 +163,11 @@ const IrrigationScreen = () => {
         transparent
         visible={!!activeDropdown}
         onRequestClose={closeDropdown}
-        animationType="fade"
-      >
+        animationType="fade">
         <TouchableWithoutFeedback onPress={closeDropdown}>
           <View style={styles.modalOverlay} />
         </TouchableWithoutFeedback>
-        
-        <Animated.View 
+        <Animated.View
           style={[
             styles.dropdownModal,
             {
@@ -182,8 +181,7 @@ const IrrigationScreen = () => {
                 },
               ],
             },
-          ]}
-        >
+          ]}>
           <ScrollView style={styles.dropdownScroll}>
             {options.map((option) => (
               <TouchableOpacity
@@ -192,9 +190,8 @@ const IrrigationScreen = () => {
                 onPress={() => {
                   handleInputChange(property, option);
                   closeDropdown();
-                }}
-              >
-                <Text style={styles.dropdownItemText}>{option}</Text>
+                }}>
+                <Text style={styles.dropdownItemText}>{i18n.t(option)}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -204,13 +201,10 @@ const IrrigationScreen = () => {
   };
 
   return (
-    <ScrollView 
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-    >
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.headerContainer}>
-        <Text style={styles.header}>Create Irrigation Plan</Text>
-        <Text style={styles.subHeader}>Enter your farm details to get started</Text>
+        <Text style={styles.header}>{i18n.t('create_irrigation_plan')}</Text>
+        <Text style={styles.subHeader}>{i18n.t('enter_farm_details')}</Text>
       </View>
 
       {error && (
@@ -220,45 +214,34 @@ const IrrigationScreen = () => {
         </View>
       )}
 
-      {/* Location Dropdown */}
+      {/* Location */}
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Farm Location</Text>
-        <TouchableOpacity 
-          style={styles.dropdownHeader}
-          onPress={() => toggleDropdown('location')}
-        >
+        <Text style={styles.label}>{i18n.t('farm_location')}</Text>
+        <TouchableOpacity style={styles.dropdownHeader} onPress={() => toggleDropdown('location')}>
           <Text style={[styles.dropdownHeaderText, !formData.location && styles.placeholderText]}>
-            {formData.location || 'Select location'}
+            {formData.location || i18n.t('select_location')}
           </Text>
-          <Ionicons 
-            name={activeDropdown === 'location' ? 'chevron-up' : 'chevron-down'} 
-            size={18} 
-            color="#4b5563" 
+          <Ionicons
+            name={activeDropdown === 'location' ? 'chevron-up' : 'chevron-down'}
+            size={18}
           />
         </TouchableOpacity>
       </View>
 
-      {/* Crop Dropdown */}
+      {/* Crop */}
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Crop Type</Text>
-        <TouchableOpacity 
-          style={styles.dropdownHeader}
-          onPress={() => toggleDropdown('crop')}
-        >
+        <Text style={styles.label}>{i18n.t('crop_type')}</Text>
+        <TouchableOpacity style={styles.dropdownHeader} onPress={() => toggleDropdown('crop')}>
           <Text style={[styles.dropdownHeaderText, !formData.crop && styles.placeholderText]}>
-            {formData.crop || 'Select crop'}
+            {formData.crop ? i18n.t(formData.crop) : i18n.t('select_crop')}
           </Text>
-          <Ionicons 
-            name={activeDropdown === 'crop' ? 'chevron-up' : 'chevron-down'} 
-            size={18} 
-            color="#4b5563" 
-          />
+          <Ionicons name={activeDropdown === 'crop' ? 'chevron-up' : 'chevron-down'} size={18} />
         </TouchableOpacity>
       </View>
 
-      {/* Planting Date */}
+      {/* Date */}
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Planting Date</Text>
+        <Text style={styles.label}>{i18n.t('planting_date')}</Text>
         {Platform.OS === 'web' ? (
           <input
             type="date"
@@ -271,12 +254,9 @@ const IrrigationScreen = () => {
           />
         ) : (
           <>
-            <TouchableOpacity
-              style={styles.dateInput}
-              onPress={() => setShowDatePicker(true)}
-            >
+            <TouchableOpacity style={styles.dateInput} onPress={() => setShowDatePicker(true)}>
               <Text style={styles.dateText}>{formData.plantingDate.toDateString()}</Text>
-              <Ionicons name="calendar" size={18} color="#4b5563" />
+              <Ionicons name="calendar" size={18} />
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
@@ -297,34 +277,30 @@ const IrrigationScreen = () => {
 
       {/* Farm Size */}
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Farm Size (acres)</Text>
+        <Text style={styles.label}>{i18n.t('farm_size')}</Text>
         <View style={styles.inputWrapper}>
           <TextInput
             style={styles.textInput}
-            placeholder="Enter farm size"
+            placeholder={i18n.t('enter_farm_size')}
             placeholderTextColor="#9ca3af"
             keyboardType="numeric"
             value={formData.farmSize}
             onChangeText={(text) => handleInputChange('farmSize', text)}
           />
-          <Ionicons name="resize" size={18} color="#4b5563" style={styles.inputIcon} />
+          <Ionicons name="resize" size={18} />
         </View>
       </View>
 
-      {/* Soil Type Dropdown */}
+      {/* Soil Type */}
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Soil Type</Text>
-        <TouchableOpacity 
-          style={styles.dropdownHeader}
-          onPress={() => toggleDropdown('soilType')}
-        >
+        <Text style={styles.label}>{i18n.t('soil_type')}</Text>
+        <TouchableOpacity style={styles.dropdownHeader} onPress={() => toggleDropdown('soilType')}>
           <Text style={[styles.dropdownHeaderText, !formData.soilType && styles.placeholderText]}>
-            {formData.soilType || 'Select soil type'}
+            {formData.soilType ? i18n.t(formData.soilType) : i18n.t('select_soil_type')}
           </Text>
-          <Ionicons 
-            name={activeDropdown === 'soilType' ? 'chevron-up' : 'chevron-down'} 
-            size={18} 
-            color="#4b5563" 
+          <Ionicons
+            name={activeDropdown === 'soilType' ? 'chevron-up' : 'chevron-down'}
+            size={18}
           />
         </TouchableOpacity>
       </View>
@@ -332,18 +308,13 @@ const IrrigationScreen = () => {
       {renderDropdownOptions()}
 
       <TouchableOpacity
-        style={[styles.submitButton, loading && styles.submitButtonDisabled]}
         onPress={handleSubmit}
-        disabled={loading}
-        activeOpacity={0.8}
-      >
+        style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+        disabled={loading}>
         {loading ? (
-          <ActivityIndicator color="white" size="small" />
+          <ActivityIndicator color="#fff" />
         ) : (
-          <>
-            <Text style={styles.submitButtonText}>Generate Irrigation Plan</Text>
-            <Ionicons name="arrow-forward" size={20} color="white" style={styles.buttonIcon} />
-          </>
+          <Text style={styles.submitButtonText}>{i18n.t('generate_irrigation_plan')}</Text>
         )}
       </TouchableOpacity>
     </ScrollView>
@@ -443,9 +414,8 @@ const styles = StyleSheet.create({
   },
   webDateInput: {
     width: '100%',
-    paddingBlock:12,
-    paddingInline:16,
-    border: '1px solid #e5e7eb',
+    paddingBlock: 12,
+    paddingInline: 16,
     borderRadius: '10px',
     backgroundColor: 'white',
     fontSize: 16,

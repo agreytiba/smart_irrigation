@@ -1,0 +1,68 @@
+{
+  "welcome": "WELCOME TO SMART IRRIGATION APP",
+  "Home": "Home",
+  "irrigationPlan": "Irrigation Plan",
+  "irrigationSchedule": "Irrigation Schedule",
+  "settings": "Settings",
+  "notifications": "Notifications",
+  "darkMode": "Dark Mode",
+  "language": "Language",
+  "logout": "Logout",
+  "confirmLogout": "Are you sure you want to logout?",
+  "cancel": "Cancel",
+  "maize": "Maize",
+  "beans": "Beans",
+  "tomatoes": "Tomatoes",
+  "clay": "Clay",
+  "sandy": "Sandy",
+  "loamy": "Loamy",
+  "Kasapo": "Kasapo",
+  "Bangalala": "Bangalala",
+  "home": {
+    "heroTitle": "Smart Irrigation",
+    "heroSubtitle": "Optimizing Water Usage for Better Yields",
+    "feature1_title": "Optimal Timing",
+    "feature1_text": "Get precise irrigation schedules tailored to your crops",
+    "feature2_title": "Water Savings",
+    "feature2_text": "Reduce water usage while maintaining crop health",
+    "getStarted": "Get Started"
+  },
+  "schedule": {
+    "title": "Schedule",
+    "subHeader": "Follow this plan for optimal water usage",
+    "waterPerAcre": "Water per acre",
+    "totalWater": "Total water needed",
+    "noData": "No schedule data available",
+    "generatePrompt": "Generate a schedule from the Irrigation tab",
+    "description": "Follow this plan for optimal water usage",
+    "liters": "liters",
+    "hintText": "Generate a schedule from the Irrigation tab"
+  },
+
+  "create_irrigation_plan": "Create Irrigation Plan",
+  "enter_farm_details": "Enter your farm details below",
+  "farm_location": "Farm Location",
+  "select_location": "Select Location",
+  "crop_type": "Crop Type",
+  "select_crop": "Select Crop",
+  "planting_date": "Planting Date",
+  "farm_size": "Farm Size (acres)",
+  "enter_farm_size": "Enter farm size",
+  "soil_type": "Soil Type",
+  "select_soil_type": "Select Soil Type",
+  "generate_irrigation_plan": "Generate Irrigation Plan",
+  "error_fill_all_fields": "Please fill all the required fields",
+  "error_invalid_farm_size": "Farm size must be a positive number",
+  "error_navigation_failed": "Navigation failed. Please try again.",
+  "error_generate_failed": "Failed to generate irrigation schedule. Try again later.",
+
+  "tabs": {
+    "home": "Home",
+    "irrigation": "Irrigation Plan",
+    "schedule": "Irrigation Schedule",
+    "settings": "Settings"
+  },
+  "splash": {
+    "welcome": "WELCOME TO SMART IRRIGATION APP"
+  }
+}

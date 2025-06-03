@@ -8,6 +8,8 @@ import SettingsScreen from './screens/SettingScreen';
 import IrrigationScreen from './screens/Irrigation';
 import { Ionicons } from '@expo/vector-icons';
 import { ScheduleItem } from './types';
+import { LanguageProvider, useLanguage } from 'context/LanguageContext';
+import i18n from './i18n/localization';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -18,33 +20,31 @@ export type RootTabParamList = {
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
-const App = () => {
+const AppContent = () => {
   const [showSplash, setShowSplash] = useState(true);
   const backgroundColor = new Animated.Value(0);
-  const textScale = new Animated.Value(0.5); // Start small
+  const textScale = new Animated.Value(0.5);
   const textOpacity = new Animated.Value(0);
-  const textPosition = new Animated.Value(50); // Start slightly lower
+  const textPosition = new Animated.Value(50);
 
-  // Color interpolation for the background transition
+  const { language } = useLanguage(); // ✅ re-render when language changes
+
   const bgColor = backgroundColor.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#FFD700', '#4CAF50'] // Yellow to Green
+    outputRange: ['#FFD700', '#4CAF50'],
   });
 
   useEffect(() => {
-    // Background color animation
     Animated.timing(backgroundColor, {
       toValue: 1,
       duration: 4000,
       useNativeDriver: false,
     }).start();
 
-    // Text animation sequence
     Animated.sequence([
-      // Scale up and fade in
       Animated.parallel([
         Animated.timing(textScale, {
-          toValue: 1.2, // Scale up slightly larger than normal
+          toValue: 1.2,
           duration: 800,
           easing: Easing.out(Easing.exp),
           useNativeDriver: true,
@@ -59,21 +59,17 @@ const App = () => {
           duration: 800,
           easing: Easing.out(Easing.exp),
           useNativeDriver: true,
-        })
+        }),
       ]),
-      // Pause for 1 second
       Animated.delay(1000),
-      // Scale back to normal
       Animated.timing(textScale, {
         toValue: 1,
         duration: 500,
         useNativeDriver: true,
       }),
-      // Pause for 1 second
       Animated.delay(1000),
     ]).start();
 
-    // Hide splash after 4 seconds total (adjust timing to match your animation)
     const timer = setTimeout(() => {
       setShowSplash(false);
     }, 4000);
@@ -85,19 +81,15 @@ const App = () => {
     return (
       <Animated.View style={[styles.splashContainer, { backgroundColor: bgColor }]}>
         <StatusBar translucent backgroundColor="transparent" />
-        <Animated.Text 
+        <Animated.Text
           style={[
-            styles.welcomeText, 
-            { 
+            styles.welcomeText,
+            {
               opacity: textOpacity,
-              transform: [
-                { scale: textScale },
-                { translateY: textPosition }
-              ]
-            }
-          ]}
-        >
-          WELCOME TO SMART IRRIGATION APP
+              transform: [{ scale: textScale }, { translateY: textPosition }],
+            },
+          ]}>
+          {i18n.t('welcome')}
         </Animated.Text>
       </Animated.View>
     );
@@ -136,32 +128,33 @@ const App = () => {
           cardStyle: {
             backgroundColor: 'transparent',
           },
-        })}
-      >
-        <Tab.Screen 
-          name="Home" 
-          component={HomeScreen} 
-          options={{ title: 'Home' }} 
+        })}>
+        <Tab.Screen name="Home" component={HomeScreen} options={{ title: i18n.t('Home') }} />
+        <Tab.Screen
+          name="Irrigation"
+          component={IrrigationScreen}
+          options={{ title: i18n.t('irrigationPlan') }}
         />
-        <Tab.Screen 
-          name="Irrigation" 
-          component={IrrigationScreen} 
-          options={{ title: 'Irrigation Plan' }} 
+        <Tab.Screen
+          name="Schedule"
+          component={ScheduleScreen}
+          options={{ title: i18n.t('irrigationSchedule') }}
         />
-        <Tab.Screen 
-          name="Schedule" 
-          component={ScheduleScreen} 
-          options={{ title: 'Irrigation Schedule' }} 
-        />
-        <Tab.Screen 
-          name="Settings" 
-          component={SettingsScreen} 
-          options={{ title: 'Settings' }} 
+        <Tab.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{ title: i18n.t('settings') }}
         />
       </Tab.Navigator>
     </NavigationContainer>
   );
 };
+
+const App = () => (
+  <LanguageProvider>
+    <AppContent />
+  </LanguageProvider>
+);
 
 const styles = StyleSheet.create({
   splashContainer: {

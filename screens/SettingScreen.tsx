@@ -1,49 +1,50 @@
+// SettingsScreen.tsx (updated)
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Switch, Button, ActivityIndicator } from 'react-native';
+import i18n from '../i18n/localization';
+import { useLanguage } from '../context/LanguageContext';
 
-const SettingsScreen = () => {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+const SettingsScreen: React.FC = () => {
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [language, setLanguage] = useState<'English' | 'Swahili'>('English');
+  const { language, setLanguage } = useLanguage();
+
+  const toggleLanguage = () => {
+    const newLang = language === 'en' ? 'sw' : 'en';
+    setLanguage(newLang);
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
-      
+      <Text style={styles.header}>{i18n.t('settings')}</Text>
+
       <View style={styles.settingItem}>
-        <Text style={styles.settingText}>Enable Notifications</Text>
+        <Text style={styles.settingText}>{i18n.t('notifications')}</Text>
         <Switch
           value={notificationsEnabled}
           onValueChange={setNotificationsEnabled}
-          trackColor={{ false: '#767577', true: '#16a34a' }}
+          thumbColor="#16a34a"
+          trackColor={{ false: '#ccc', true: '#a7f3d0' }}
         />
       </View>
-      
+
       <View style={styles.settingItem}>
-        <Text style={styles.settingText}>Dark Mode</Text>
+        <Text style={styles.settingText}>{i18n.t('darkMode')}</Text>
         <Switch
           value={darkMode}
           onValueChange={setDarkMode}
-          trackColor={{ false: '#767577', true: '#16a34a' }}
+          thumbColor="#16a34a"
+          trackColor={{ false: '#ccc', true: '#a7f3d0' }}
         />
       </View>
-      
+
       <View style={styles.settingItem}>
-        <Text style={styles.settingText}>Language</Text>
-        <View style={styles.languageContainer}>
-          <TouchableOpacity 
-            style={[styles.languageButton, language === 'English' && styles.activeLanguage]}
-            onPress={() => setLanguage('English')}
-          >
-            <Text style={styles.languageText}>English</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.languageButton, language === 'Swahili' && styles.activeLanguage]}
-            onPress={() => setLanguage('Swahili')}
-          >
-            <Text style={styles.languageText}>Swahili</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.settingText}>{i18n.t('language')}</Text>
+        <Button
+          title={language === 'en' ? 'Switch to Swahili' : 'Badilisha lugha kwenda Kiingereza'}
+          onPress={toggleLanguage}
+          color="#16a34a"
+        />
       </View>
     </View>
   );
@@ -53,42 +54,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    paddingTop: 60,
+    backgroundColor: '#f1f5f9',
   },
-  title: {
-    fontSize: 22,
+  header: {
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 30,
-    color: '#2c3e50',
+    color: '#111827',
   },
   settingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    marginBottom: 25,
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 12,
+    elevation: 1,
   },
   settingText: {
     fontSize: 16,
+    color: '#111827',
   },
-  languageContainer: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  languageButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  activeLanguage: {
-    backgroundColor: '#16a34a',
-    borderColor: '#16a34a',
-  },
-  languageText: {
-    color: '#333',
+  logoutButton: {
+    marginTop: 40,
   },
 });
 

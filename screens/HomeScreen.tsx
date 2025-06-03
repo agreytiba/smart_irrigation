@@ -1,28 +1,34 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, useWindowDimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  useWindowDimensions,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { RootTabParamList } from '../App';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { RootTabParamList } from '../App';
+import i18n from '../i18n/localization';
+import { useLanguage } from '../context/LanguageContext';
 
 const HomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootTabParamList>>();
   const { width } = useWindowDimensions();
-  
-  // Dynamic spacing calculations
+  const { language } = useLanguage(); // This triggers re-render when language changes
+
   const CONTAINER_PADDING = 16;
   const CARD_GAP = 12;
-  const cardWidth = (width - (CONTAINER_PADDING * 2) - CARD_GAP) / 2;
+  const cardWidth = (width - CONTAINER_PADDING * 2 - CARD_GAP) / 2;
 
   return (
     <View style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={[
-          styles.scrollContainer, 
-          { paddingHorizontal: CONTAINER_PADDING }
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView
+        contentContainerStyle={[styles.scrollContainer, { paddingHorizontal: CONTAINER_PADDING }]}
+        showsVerticalScrollIndicator={false}>
         {/* Hero Section */}
         <View style={styles.heroImageContainer}>
           <Image
@@ -32,40 +38,33 @@ const HomeScreen = () => {
           />
           <View style={styles.imageOverlay} />
           <View style={styles.heroTextContainer}>
-            <Text style={styles.heroTitle}>Smart Irrigation</Text>
-            <Text style={styles.heroSubtitle}>Optimizing Water Usage for Better Yields</Text>
+            <Text style={styles.heroTitle}>{i18n.t('home.heroTitle')}</Text>
+            <Text style={styles.heroSubtitle}>{i18n.t('home.heroSubtitle')}</Text>
           </View>
         </View>
 
-        {/* Feature Cards - Flexible Width */}
+        {/* Feature Cards */}
         <View style={styles.featuresWrapper}>
           <View style={[styles.featureCard, { width: cardWidth }]}>
             <Ionicons name="time-outline" size={28} color="#16a34a" />
-            <Text style={styles.featureTitle}>Optimal Timing</Text>
-            <Text style={styles.featureText}>Get precise irrigation schedules tailored to your crops</Text>
+            <Text style={styles.featureTitle}>{i18n.t('home.feature1_title')}</Text>
+            <Text style={styles.featureText}>{i18n.t('home.feature1_text')}</Text>
           </View>
 
-          <View style={[styles.featureCard, { 
-            width: cardWidth,
-            marginLeft: CARD_GAP 
-          }]}>
+          <View style={[styles.featureCard, { width: cardWidth, marginLeft: CARD_GAP }]}>
             <Ionicons name="water-outline" size={28} color="#16a34a" />
-            <Text style={styles.featureTitle}>Water Savings</Text>
-            <Text style={styles.featureText}>Reduce water usage while maintaining crop health</Text>
+            <Text style={styles.featureTitle}>{i18n.t('home.feature2_title')}</Text>
+            <Text style={styles.featureText}>{i18n.t('home.feature2_text')}</Text>
           </View>
         </View>
       </ScrollView>
 
-      {/* Fixed Bottom Button */}
-      <View style={[styles.buttonContainer, { 
-        left: CONTAINER_PADDING,
-        right: CONTAINER_PADDING
-      }]}>
-        <TouchableOpacity 
+      {/* Bottom Button */}
+      <View style={[styles.buttonContainer, { left: CONTAINER_PADDING, right: CONTAINER_PADDING }]}>
+        <TouchableOpacity
           style={styles.getStartedButton}
-          onPress={() => navigation.navigate('Irrigation')}
-        >
-          <Text style={styles.getStartedButtonText}>Get Started</Text>
+          onPress={() => navigation.navigate('Irrigation')}>
+          <Text style={styles.getStartedButtonText}>{i18n.t('home.getStarted')}</Text>
           <Ionicons name="arrow-forward" size={20} color="white" />
         </TouchableOpacity>
       </View>
@@ -74,27 +73,16 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  scrollContainer: {
-    paddingBottom: 100,
-  },
+  container: { flex: 1, backgroundColor: '#f8f9fa' },
+  scrollContainer: { paddingBottom: 100 },
   heroImageContainer: {
     height: 300,
     marginBottom: 25,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  heroImage: {
-    width: '100%',
-    height: '100%',
-  },
-  imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
+  heroImage: { width: '100%', height: '100%' },
+  imageOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)' },
   heroTextContainer: {
     position: 'absolute',
     alignItems: 'center',
@@ -120,10 +108,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
     lineHeight: 24,
   },
-  featuresWrapper: {
-    flexDirection: 'row',
-    marginBottom: 25,
-  },
+  featuresWrapper: { flexDirection: 'row', marginBottom: 25 },
   featureCard: {
     backgroundColor: 'white',
     borderRadius: 16,
@@ -148,10 +133,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 20,
-  },
+  buttonContainer: { position: 'absolute', bottom: 20 },
   getStartedButton: {
     backgroundColor: '#16a34a',
     paddingVertical: 16,
